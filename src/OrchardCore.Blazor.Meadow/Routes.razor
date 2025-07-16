@@ -1,7 +1,28 @@
-﻿<Router AppAssembly="typeof(App).Assembly">
+﻿<CascadingAuthenticationState>
+    <Router AppAssembly="@typeof(App).Assembly">
+        <Found Context="routeData">
 
-    <Found Context="routeData">
-        <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
-        <FocusOnNavigate RouteData="routeData" Selector="h1" />
-    </Found>
-</Router>
+            <CascadingValue Value="routeData">
+                <AuthorizeRouteView RouteData="routeData" DefaultLayout="@typeof(Layout.MainLayout)">
+                    <NotAuthorized>
+                        @* <RedirectToLogin/> *@
+                    </NotAuthorized>
+                </AuthorizeRouteView>
+            </CascadingValue>
+            <FocusOnNavigate RouteData="routeData" Selector="h1" />
+
+            @*             <CascadingValue Value="routeData">
+                <RouteView RouteData="routeData" DefaultLayout="typeof(ProgDevEl.BlazorClient.Layouts.BasicLayout)" />
+            </CascadingValue> *@
+
+        </Found>
+        <NotFound>
+            <PageTitle>Not found</PageTitle>
+            <LayoutView Layout="@typeof(Layout.MainLayout)">
+                <p role="alert">Sorry, there's nothing at this address.</p>
+            </LayoutView>
+        </NotFound>
+    </Router>
+
+    <AntContainer />
+</CascadingAuthenticationState>

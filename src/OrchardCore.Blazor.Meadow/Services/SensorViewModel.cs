@@ -16,7 +16,10 @@ namespace OrchardCore.Blazor.Meadow.Services
         public string MagneticValue { get; private set; } = "-";
         public string TemperatureValue { get; private set; } = "-";
 
-        public event Action? StateChanged;
+        public event Action<IChangeResult<(
+        Acceleration3D? Acceleration3D, AngularVelocity3D? AngularVelocity3D,
+        MagneticField3D? MagneticField3D, Quaternion? QuaternionOrientation,
+        EulerAngles? EulerOrientation, Temperature? Temperature)>>? StateChanged;
 
         public SensorViewModel()
         {
@@ -39,7 +42,7 @@ namespace OrchardCore.Blazor.Meadow.Services
             AccelerationValue = e.New.Acceleration3D.HasValue ? $"X: {e.New.Acceleration3D.Value.X}     Y: {e.New.Acceleration3D.Value.Y}     Z: {e.New.Acceleration3D.Value.Z}" : "-";
             MagneticValue = e.New.MagneticField3D.HasValue ? $"X: {e.New.MagneticField3D.Value.X}     Y: {e.New.MagneticField3D.Value.Y}     Z: {e.New.MagneticField3D.Value.Z}" : "-";
             TemperatureValue = e.New.Temperature.HasValue ? $"{e.New.Temperature.Value}°C" : "-";
-            StateChanged?.Invoke();
+            StateChanged?.Invoke(e);
         }
 
         public void Dispose()

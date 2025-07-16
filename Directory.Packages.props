@@ -6,18 +6,19 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="Aspire.AppHost.Sdk" Version="9.3.1" />
-    <PackageVersion Include="AntDesign" Version="1.4.0" />
-    <PackageVersion Include="AntDesign.Charts" Version="0.7.2" />
-    <PackageVersion Include="AntDesign.Extensions.Localization" Version="1.4.0" />
+    <PackageVersion Include="AntDesign" Version="1.4.3" />
+    <PackageVersion Include="AntDesign.Charts" Version="0.7.3" />
+    <PackageVersion Include="AntDesign.Extensions.Localization" Version="1.4.3" />
     <PackageVersion Include="AntDesign.ProLayout" Version="1.4.0" />
     <PackageVersion Include="Aspire.Hosting.AppHost" Version="9.3.1" />
     <PackageVersion Include="Aspire.Hosting.Azure.Storage" Version="9.3.1" />
     <PackageVersion Include="Aspire.Hosting.Docker" Version="9.3.1-preview.1.25305.6" />
     <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="9.3.1" />
     <PackageVersion Include="Aspire.Hosting.Testing" Version="9.3.1" />
-	<PackageVersion Include="Meadow.Blazor" Version="2.2.0.10-beta" />
-	<PackageVersion Include="Meadow.Foundation" Version="2.2.0.10-beta" />
-	<PackageVersion Include="Microsoft.AspNetCore.Components.Web" Version="9.0.7" />
+    <PackageVersion Include="Meadow.Blazor" Version="2.3.0" />
+    <PackageVersion Include="Meadow.Foundation" Version="2.3.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.Authorization" Version="9.0.7" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.Web" Version="9.0.7" />
     <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="9.0.7" />
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="9.7.0" />
     <PackageVersion Include="Microsoft.Extensions.ServiceDiscovery" Version="9.3.1" />

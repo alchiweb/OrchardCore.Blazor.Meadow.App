@@ -16,6 +16,7 @@ var postgres = builder.AddPostgres("postgres", postgresUsername, postgresPasswor
                       .WithLifetime(ContainerLifetime.Persistent);
 var mysqldb = postgres.AddDatabase("OCBlazorMeadowDb");
 
+
 // the Azure Storage emulator
 var storage = builder.AddAzureStorage("storage").RunAsEmulator(azurite =>
 {

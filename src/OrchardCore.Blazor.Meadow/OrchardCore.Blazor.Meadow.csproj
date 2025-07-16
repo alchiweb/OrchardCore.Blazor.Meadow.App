@@ -16,9 +16,14 @@
   </ItemGroup>
 	
   <ItemGroup>
-	  <PackageReference Include="Meadow.Blazor" />
+	<PackageReference Include="AntDesign" />
+	<PackageReference Include="AntDesign.Charts" />
+	<PackageReference Include="AntDesign.Extensions.Localization" />
+	<PackageReference Include="AntDesign.ProLayout" />
+	<PackageReference Include="Meadow.Blazor" />
+	<PackageReference Include="Microsoft.AspNetCore.Components.Authorization" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" />
-	  <PackageReference Include="OrchardCore.ContentManagement" />
+	<PackageReference Include="OrchardCore.ContentManagement" />
     <PackageReference Include="SixLabors.ImageSharp" />
   </ItemGroup>
 	

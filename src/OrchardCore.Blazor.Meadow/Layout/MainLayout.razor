@@ -1,6 +1,33 @@
-﻿@inherits LayoutComponentBase
+﻿@using AntDesign.ProLayout
+@inherits LayoutComponentBase
 
-<div class="page">
+<AntDesign.ProLayout.BasicLayout @ref="_basicLayout"
+Logo="_logoUrl"
+MenuData="_menuData"
+MenuAccordion
+@bind-Collapsed="collapsed">
+
+    <HeaderContentRender>
+        <Space Size="@("24")">
+            <SpaceItem>
+                <Icon Class="action" Type="@(collapsed?"menu-unfold":"menu-fold")" OnClick="Toggle" />
+            </SpaceItem>
+        </Space>
+    </HeaderContentRender>
+    <RightContentRender>
+        <RightContent />
+    </RightContentRender>
+    <ChildContent>
+        @Body
+    </ChildContent>
+    <FooterRender>
+        <FooterView Copyright="2021 Ant Design Blazor" Links="Links"></FooterView>
+    </FooterRender>
+</AntDesign.ProLayout.BasicLayout>
+
+<SettingDrawer />
+
+@* <div class="page">
     <div class="sidebar">
         <NavMenu />
     </div>
@@ -20,4 +47,69 @@
     An unhandled error has occurred.
     <a href="" class="reload">Reload</a>
     <a class="dismiss">🗙</a>
-</div>
+</div> *@
+
+
+@code {
+    bool collapsed;
+    private MenuDataItem[] _menuData = new MenuDataItem[] {
+        new MenuDataItem()
+        {
+            Name = "Test",
+            Path = "/content/test",
+            Icon = "file-text"
+        },
+        new MenuDataItem()
+        {
+            Name = "Sensors",
+            Path = "/sensor",
+            Icon = "dashboard"
+        },
+        new MenuDataItem()
+        {
+            Name = "Orchard Core Admin",
+            Path = "/admin",
+            Icon = "setting"
+        },
+    };
+    private AuthenticationState? authState;
+    private string _logoUrl = "/pro_icon.svg";
+
+    AntDesign.ProLayout.BasicLayout _basicLayout;
+
+    public LinkItem[] Links =
+    {
+            new LinkItem
+            {
+                Key = "Ant Design Blazor",
+                Title = "Ant Design Blazor",
+                Href = "https://antblazor.com",
+                BlankTarget = true,
+            },
+            new LinkItem
+            {
+                Key = "github",
+                Title = (RenderFragment)(@<Icon Type="github" />),
+                Href = "https://github.com/ant-design-blazor/ant-design-pro-blazor",
+                BlankTarget = true,
+            },
+            new LinkItem
+            {
+                Key = "Blazor",
+                Title = "Blazor",
+                Href = "https://dotnet.microsoft.com/apps/aspnet/web-apps/blazor?WT.mc_id=DT-MVP-5003987",
+                BlankTarget = true,
+            }
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+
+    }
+
+    void Toggle()
+    {
+        collapsed = !collapsed;
+    }
+
+}

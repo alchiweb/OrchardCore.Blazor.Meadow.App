@@ -1,6 +1,16 @@
 @page "/sensor"
 @rendermode InteractiveServer
 @inject OrchardCore.Blazor.Meadow.Services.SensorViewModel ViewModel
+@inject NavigationManager NavigationManager
+@inject HttpClient HttpClient
+
+
+@using AntDesign.Charts
+@using Title = AntDesign.Charts.Title
+@using global::Meadow
+@using global::Meadow.Foundation.Spatial
+@using global::Meadow.Units
+@* @using DataChart = (DateTime date, double? value, string category); *@
 
 <div class="container">
     <div class="content">
@@ -9,6 +19,33 @@
         </div>
         <h1>Meadow Blazor</h1>
         <h2>IMU values from Jetson Nano</h2>
+
+        <Tabs ActiveKeyChanged="OnTabChanged">
+            <TabPane Key="1">
+                <TabTemplate>Temperature</TabTemplate>
+                <ChildContent>
+                    <AntDesign.Charts.Line @ref="chart_temperature" Data="config_temperature.Data" Config="config_temperature" />
+                </ChildContent>
+            </TabPane>
+            <TabPane Key="2">
+                <TabTemplate>Acceleration</TabTemplate>
+                <ChildContent>
+                    <AntDesign.Charts.Line @ref="chart_acceleration" Data="config_acceleration.Data" Config="config_acceleration" />
+                </ChildContent>
+            </TabPane>
+            <TabPane Key="3">
+                <TabTemplate>Angular Velocity</TabTemplate>
+                <ChildContent>
+                    <AntDesign.Charts.Line @ref="chart_angular_velocity" Data="config_angular_velocity.Data" Config="config_angular_velocity" />
+                </ChildContent>
+            </TabPane>
+            <TabPane Key="4">
+                <TabTemplate>Magnetic Field</TabTemplate>
+                <ChildContent>
+                    <AntDesign.Charts.Line @ref="chart_magnetic_field" Data="config_magnetic_field.Data" Config="config_magnetic_field" />
+                </ChildContent>
+            </TabPane>
+        </Tabs>
 
         <div class="readings">
         <div class="reading">
@@ -32,18 +69,226 @@
 </div>
 
 @code {
+    public string CurrentActiveChart= "1";
+    public record DataChart(DateTime date, double? value, string category);
+    IChartComponent chart_temperature;
+    IChartComponent chart_acceleration;
+    IChartComponent chart_angular_velocity;
+    IChartComponent chart_magnetic_field;
+    List<DataChart> data_temperature = new();
+    List<DataChart> data_acceleration = new();
+    List<DataChart> data_angular_velocity = new();
+    List<DataChart> data_magnetic_field = new();
+
+
+    LineConfig config_acceleration = new LineConfig
+    {
+        Title = new Title
+        {
+            Visible = true,
+            Text = "曲线折线图"
+        },
+        Description = new Description
+        {
+            Visible = true,
+            Text = "用平滑的曲线代替折线。"
+        },
+        Padding = "auto",
+        AutoFit = true,
+        Smooth = true,
+        SeriesField = "category",
+        XField = "date",
+        YField = "value"
+    };
+    LineConfig config_angular_velocity = new LineConfig
+    {
+        Title = new Title
+        {
+            Visible = true,
+            Text = "曲线折线图"
+        },
+        Description = new Description
+        {
+            Visible = true,
+            Text = "用平滑的曲线代替折线。"
+        },
+        Padding = "auto",
+        AutoFit = true,
+        Smooth = true,
+        SeriesField = "category",
+        XField = "date",
+        YField = "value",
+    };
+    LineConfig config_magnetic_field = new LineConfig
+    {
+        Title = new Title
+        {
+            Visible = true,
+            Text = "曲线折线图"
+        },
+        Description = new Description
+        {
+            Visible = true,
+            Text = "用平滑的曲线代替折线。"
+        },
+        Padding = "auto",
+        AutoFit = true,
+        Smooth = true,
+        SeriesField = "category",
+        XField = "date",
+        YField = "value"
+    };
+    Dictionary<DateTime, (
+        Acceleration3D? Acceleration3D, AngularVelocity3D? AngularVelocity3D,
+        MagneticField3D? MagneticField3D, Quaternion? QuaternionOrientation,
+        EulerAngles? EulerOrientation, Temperature? Temperature)> sensorData = new();
+
+    LineConfig config_temperature = new LineConfig
+    {
+        Label = new Label
+        {
+            Visible = true,
+            Text = new[] { "The causes of CO2 emissions", "The causes of CO2 emissiaeazeons", "The azfeazefcauses of CO2 emissions" }
+        },
+        Padding = "auto",
+        AutoFit = true,
+        Smooth = true,
+        SeriesField = "category",
+        XField = "date",
+        YField = "value"
+        //SeriesField = "category",
+        // XAxis = new ValueCatTimeAxis
+        // {
+        //     Type = "value"
+        // },
+        // YAxis = new ValueAxis
+        // {
+        //     Label = new BaseAxisLabel()
+        // },
+        @*responsive = true,*@
+    };
+
+
     protected override void OnInitialized()
     {
         ViewModel.StateChanged += OnViewModelStateChanged;
+        @*
+        // Simulate data for testing purposes
+        var autoRand = new Random();
+
+        for (int i = 0; i < 100; i++)
+        {
+            AddData(DateTime.UtcNow.AddSeconds(2 * i), new()
+            {
+                Acceleration3D = new Acceleration3D(autoRand.NextDouble(), autoRand.NextDouble(), autoRand.NextDouble()),
+                AngularVelocity3D = new AngularVelocity3D(autoRand.NextDouble(), autoRand.NextDouble(), autoRand.NextDouble()),
+                MagneticField3D = new MagneticField3D(autoRand.NextDouble(), autoRand.NextDouble(), autoRand.NextDouble()),
+                Temperature = new Temperature(autoRand.Next(20, 30)),
+            });
+        } *@
+        InvokeAsync(StateHasChanged).GetAwaiter().GetResult();
+
     }
 
-    private void OnViewModelStateChanged()
+    private void OnViewModelStateChanged(IChangeResult<(
+        Acceleration3D? Acceleration3D, AngularVelocity3D? AngularVelocity3D,
+        MagneticField3D? MagneticField3D, Quaternion? QuaternionOrientation,
+        EulerAngles? EulerOrientation, Temperature? Temperature)> e)
     {
+        AddData(DateTime.UtcNow, e.New);
+        UpdateDataCurrentTab().GetAwaiter().GetResult();
         InvokeAsync(StateHasChanged).GetAwaiter().GetResult();
     }
 
-    public void Dispose()
+    private async Task UpdateDataCurrentTab()
     {
-        ViewModel.StateChanged -= OnViewModelStateChanged;
+        try
+        {
+            switch (CurrentActiveChart)
+            {
+                case "1":
+                    if (chart_temperature != null)
+                    {
+                        config_temperature.Data = data_temperature.ToArray<DataChart>();
+                        await chart_temperature.ChangeData(config_temperature.Data);
+                    }
+                    break;
+                case "2":
+                    if (chart_acceleration != null)
+                    {
+                        config_acceleration.Data = data_acceleration.ToArray<DataChart>();
+                        await chart_acceleration.ChangeData(config_acceleration.Data);
+                    }
+                    break;
+                case "3":
+                    if (chart_angular_velocity != null)
+                    {
+                        config_angular_velocity.Data = data_angular_velocity.ToArray<DataChart>();
+                        await chart_angular_velocity.ChangeData(config_angular_velocity.Data);
+                    }
+                    break;
+                case "4":
+                    if (chart_magnetic_field != null)
+                    {
+                        config_magnetic_field.Data = data_magnetic_field.ToArray<DataChart>();
+                        await chart_magnetic_field.ChangeData(config_magnetic_field.Data);
+                    }
+                    break;
+            }
+        }
+        catch (Exception e) { }
     }
+    private async Task OnTabChanged(string activeKey)
+    {
+        CurrentActiveChart = activeKey;
+        await UpdateDataCurrentTab();
+    }
+
+    private void AddData(DateTime date, (
+    Acceleration3D? Acceleration3D, AngularVelocity3D? AngularVelocity3D,
+    MagneticField3D? MagneticField3D, Quaternion? QuaternionOrientation,
+    EulerAngles? EulerOrientation, Temperature? Temperature) data)
+    {
+        sensorData.Add(DateTime.UtcNow, data);
+        if (sensorData.Count > 100)
+        {
+            sensorData.Remove(sensorData.Keys.First());
+            data_temperature.RemoveAt(0);
+            for (int i = 0; i < 3; i++)
+            {
+                data_acceleration.RemoveAt(0);
+                data_angular_velocity.RemoveAt(0);
+                data_magnetic_field.RemoveAt(0);
+            }
+
+        }
+        data_temperature.Add(new DataChart(date, data.Temperature.Value.Celsius, "temperature"));
+        @* config_temperature.Data = data_temperature.ToArray<DataChart>(); *@
+        data_acceleration.AddRange(new[]{
+            new DataChart(date, data.Acceleration3D?.X.Gravity, "acceleration_x"),
+            new DataChart(date, data.Acceleration3D?.Y.Gravity, "acceleration_y"),
+            new DataChart(date, data.Acceleration3D?.Z.Gravity, "acceleration_z")
+        });
+        @* config_acceleration.Data = data_acceleration.ToArray<DataChart>(); *@
+        data_angular_velocity.AddRange(new[]{
+            new DataChart(date, data.AngularVelocity3D?.X.RadiansPerSecond, "angular_velocity_x"),
+            new DataChart(date, data.AngularVelocity3D?.Y.RadiansPerSecond, "angular_velocity_y"),
+            new DataChart(date, data.AngularVelocity3D?.Z.RadiansPerSecond, "angular_velocity_z")
+        });
+        @* config_angular_velocity.Data = data_angular_velocity.ToArray<DataChart>(); *@
+        data_magnetic_field.AddRange(new[]{
+            new DataChart(date, data.MagneticField3D?.X.Tesla, "magnetic_field_x"),
+            new DataChart(date, data.MagneticField3D?.Y.Tesla, "magnetic_field_y"),
+            new DataChart(date, data.MagneticField3D?.Z.Tesla, "magnetic_field_z")
+        });
+        @* config_magnetic_field.Data = data_magnetic_field.ToArray<DataChart>(); *@
+    }
+
+    private void Dispose()
+    {   
+        try {
+            ViewModel.StateChanged -= OnViewModelStateChanged;
+        }catch (JSDisconnectedException){}
+    }
+
 }

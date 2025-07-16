@@ -1,8 +1,9 @@
-using OrchardCore.Blazor.Meadow.Services;
+using AntDesign.ProLayout;
 using Meadow.Blazor;
 using OrchardCore.Blazor.Meadow;
-using OrchardCoreApp.Migrations;
+using OrchardCore.Blazor.Meadow.Services;
 using OrchardCore.Data.Migration;
+using OrchardCoreApp.Migrations;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +14,7 @@ builder.Services
     .AddOrchardCms()
     .ConfigureServices(services =>
     {
+        services.AddAntDesign();
         services.AddDataMigration<ImportMigration>()
             .AddRazorComponents()
             .AddInteractiveServerComponents();
@@ -25,6 +27,8 @@ builder.Services
         routes.MapStaticAssets();
         routes.MapRazorComponents<App>()
             .AddInteractiveServerRenderMode();
+        
+
     })
     .AddAzureShellsConfiguration()
     .AddSetupFeatures("OrchardCore.AutoSetup")
@@ -33,6 +37,13 @@ builder.Services
     .EnableFeature("OrchardCore.DataProtection.Azure")
     .EnableFeature("OrchardCore.Recipes")
     .EnableFeature("OrchardCore.Recipes.Core");
+
+//builder.Services.Configure<ProSettings>(builder.Configuration.GetSection("ProSettings"));
+
+//builder.Services.AddInteractiveStringLocalizer();
+//builder.Services.AddLocalization();
+//builder.Services.AddAuthorizationCore();
+
 
 builder.Services.AddScoped<SensorViewModel>();
 
@@ -54,7 +65,15 @@ app.UseHttpsRedirection();
 //app.MapStaticAssets();
 //app.MapRazorComponents<App>()
 //    .AddInteractiveServerRenderMode();
-app.UseMeadow<MeadowApp>();
+try
+{
+    app.UseMeadow<MeadowApp>();
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Error initializing Meadow: {ex.Message}");
+    // Handle the exception as needed
+}
 app.UseOrchardCore(_ =>
 {
     // serilog is creating issues
