@@ -1,0 +1,37 @@
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+    <AspireSdkVersion>9.3.1</AspireSdkVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageVersion Include="Aspire.AppHost.Sdk" Version="9.3.1" />
+    <PackageVersion Include="AntDesign" Version="1.4.0" />
+    <PackageVersion Include="AntDesign.Charts" Version="0.7.2" />
+    <PackageVersion Include="AntDesign.Extensions.Localization" Version="1.4.0" />
+    <PackageVersion Include="AntDesign.ProLayout" Version="1.4.0" />
+    <PackageVersion Include="Aspire.Hosting.AppHost" Version="9.3.1" />
+    <PackageVersion Include="Aspire.Hosting.Azure.Storage" Version="9.3.1" />
+    <PackageVersion Include="Aspire.Hosting.Docker" Version="9.3.1-preview.1.25305.6" />
+    <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="9.3.1" />
+    <PackageVersion Include="Aspire.Hosting.Testing" Version="9.3.1" />
+	<PackageVersion Include="Meadow.Blazor" Version="2.2.0.10-beta" />
+	<PackageVersion Include="Meadow.Foundation" Version="2.2.0.10-beta" />
+	<PackageVersion Include="Microsoft.AspNetCore.Components.Web" Version="9.0.7" />
+    <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="9.0.7" />
+    <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="9.7.0" />
+    <PackageVersion Include="Microsoft.Extensions.ServiceDiscovery" Version="9.3.1" />
+    <PackageVersion Include="Microsoft.Identity.Web" Version="3.10.0" />
+    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.12.0" />
+    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.12.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.12.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.12.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.12.0" />
+    <PackageVersion Include="OrchardCore.Application.Cms.Targets" Version="2.1.7" />
+    <PackageVersion Include="OrchardCore.ContentFields" Version="2.1.7" />
+    <PackageVersion Include="OrchardCore.ContentManagement" Version="2.1.7" />
+    <PackageVersion Include="OrchardCore.Logging.NLog" Version="2.1.7" />
+    <PackageVersion Include="OrchardCore.Shells.Azure" Version="2.1.7" />
+    <PackageVersion Include="SixLabors.ImageSharp" Version="3.1.10" />
+  </ItemGroup>
+</Project>

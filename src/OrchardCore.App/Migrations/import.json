@@ -1,0 +1,118 @@
+{
+  "name": "",
+  "displayName": "",
+  "description": "",
+  "author": "",
+  "website": "",
+  "version": "",
+  "issetuprecipe": false,
+  "categories": [],
+  "tags": [],
+  "steps": [
+    {
+      "name": "Content",
+      "data": [
+        {
+          "ContentItemId": "[js: uuid()]",
+          "ContentItemVersionId": "[js: uuid()]",
+          "ContentType": "MarkdownPage",
+          "DisplayText": "Test! ! ! !",
+          "Latest": true,
+          "Published": true,
+          "ModifiedUtc": "2024-01-27T20:26:30.0529958Z",
+          "PublishedUtc": "2024-01-27T20:26:30.0704945Z",
+          "CreatedUtc": "2024-01-27T20:26:08.2132621Z",
+          "Owner": "[js: parameters(\u0027AdminUserId\u0027)]",
+          "Author": "[js: parameters(\u0027AdminUsername\u0027)]",
+          "MarkdownPage": {},
+          "AliasPart": {
+            "Alias": "test"
+          },
+          "MarkdownBodyPart": {
+            "Markdown": "## Introduction \r\nOpen-source, modular, multi-tenant application framework and CMS for ASP.NET Core\r\n\r\n## Features\r\n- Media Management\r\n- Multi-Lingual\r\n- Modular\r\n- Multi-Tenant\r\n- Security\r\n- Workflows"
+          },
+          "TitlePart": {
+            "Title": "Test!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ContentDefinition",
+      "ContentTypes": [
+        {
+          "Name": "MarkdownPage",
+          "DisplayName": "Markdown Page",
+          "Settings": {
+            "ContentTypeSettings": {
+              "Creatable": true,
+              "Listable": true,
+              "Draftable": true,
+              "Versionable": true,
+              "Securable": true
+            },
+            "FullTextAspectSettings": {},
+            "GraphQLContentTypeSettings": {}
+          },
+          "ContentTypePartDefinitionRecords": [
+            {
+              "PartName": "MarkdownPage",
+              "Name": "MarkdownPage",
+              "Settings": {}
+            },
+            {
+              "PartName": "AliasPart",
+              "Name": "AliasPart",
+              "Settings": {
+                "ContentTypePartSettings": {
+                  "Position": "1"
+                }
+              }
+            },
+            {
+              "PartName": "MarkdownBodyPart",
+              "Name": "MarkdownBodyPart",
+              "Settings": {
+                "ContentTypePartSettings": {
+                  "Position": "3"
+                }
+              }
+            },
+            {
+              "PartName": "TitlePart",
+              "Name": "TitlePart",
+              "Settings": {
+                "ContentTypePartSettings": {
+                  "Position": "0"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "ContentParts": []
+    },
+    {
+      "name": "content",
+      "data": [
+        {
+          "ContentItemId": "[js: uuid()]",
+          "ContentType": "MarkdownPage",
+          "DisplayText": "Orchard Demo",
+          "Latest": true,
+          "Published": true,
+          "Owner": "[js: parameters(\u0027AdminUserId\u0027)]",
+          "Author": "[js: parameters(\u0027AdminUsername\u0027)]",
+          "MarkdownPage": {
+            "SubTitle": {
+              "Text": "Look at how we use Orchard with asp.net Aspire"
+            }
+          },
+          "TitlePart": {
+            "Title": "Orchard Demo"
+          }
+        }
+      ]
+    }
+  ]
+}
