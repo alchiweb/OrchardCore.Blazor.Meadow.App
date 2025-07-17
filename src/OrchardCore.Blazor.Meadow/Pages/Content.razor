@@ -30,14 +30,22 @@ else
     protected override async Task OnInitializedAsync()
     {
         Site = await SiteService.GetSiteSettingsAsync();
-        await Task.Delay(500);
     }
 
     protected override async Task OnParametersSetAsync()
     {
         string id = await handleManager.GetContentItemIdAsync($"alias:{Alias}");
-        ContentItem = await contentManager.GetAsync(id, VersionOptions.Published);
-        var bodyAspect = await contentManager.PopulateAspectAsync<BodyAspect>(ContentItem);
-        Markup = bodyAspect.Body.ToString();
+        if (!string.IsNullOrEmpty(id))
+        {
+            ContentItem = await contentManager.GetAsync(id, VersionOptions.Published);
+            if (ContentItem != null)
+            {
+                var bodyAspect = await contentManager.PopulateAspectAsync<BodyAspect>(ContentItem);
+                if (bodyAspect?.Body != null)
+                {
+                    Markup = bodyAspect.Body.ToString();
+                }
+            }
+        }
     }
 }

@@ -5,6 +5,7 @@ using Meadow;
 using Meadow.Foundation;
 using Meadow.Hardware;
 using Silk.NET.Input;
+using OrchardCore.Blazor.Meadow.Services;
 
 namespace OrchardCore.Blazor.Meadow
 {
@@ -23,6 +24,7 @@ namespace OrchardCore.Blazor.Meadow
 
             Resolver.Log.Info("Hello, Jetson Nano!");
 
+            SensorService.Decimals = 2;
             var bus = Device.CreateI2cBus(7);
             var imu = new Icm20948(bus);
             Resolver.Services.Add(imu);

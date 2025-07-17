@@ -1,6 +1,6 @@
 # Meadow Orchard CMS with ASP.NET Aspire
 
-
+## This is a Proof of Concept (POC)
  This Blazor app is a POC for using together:
  ![Sensor data in Charts (with Ant Blazor)](assets/sensor_charts.gif)
 
@@ -13,6 +13,19 @@
 
  ![Aspire + Orchard Core admin + Orchard Core content in Blazor](assets/aspire_orchard_core.gif)
 
+ ## Test without hardware
+ Note: if you haven't the hardware, it's possible to test with fake data, even if you are on Windows.
+ 
+ In the following file:
+ ```
+ src\OrchardCore.Blazor.Meadow\Pages\Sensor.razor
+ ```
+ Uncomment the line (after the comment):
+ ```csharp
+        // Simulate data for testing purposes
+        Task.Run(async () => await AddFakeData());
+ ```
+ ## Thanks
  Thanks to:
  - https://github.com/nubiquest-blogs/orchard-core-with-aspire for the tutorial for Aspire with Orchard Core
  - https://docs.orchardcore.net/en/main/guides/create-blazor-cms/ for Blazor with Orchard Core

@@ -1,6 +1,6 @@
 @page "/sensor"
 @rendermode InteractiveServer
-@inject OrchardCore.Blazor.Meadow.Services.SensorViewModel ViewModel
+@inject OrchardCore.Blazor.Meadow.Services.SensorService SensorService
 @inject NavigationManager NavigationManager
 @inject HttpClient HttpClient
 
@@ -10,6 +10,7 @@
 @using global::Meadow
 @using global::Meadow.Foundation.Spatial
 @using global::Meadow.Units
+@using static global::Meadow.Foundation.Sensors.Motion.Icm20948
 @* @using DataChart = (DateTime date, double? value, string category); *@
 
 <div class="container">
@@ -45,54 +46,62 @@
                     <AntDesign.Charts.Line @ref="chart_magnetic_field" Data="config_magnetic_field.Data" Config="config_magnetic_field" />
                 </ChildContent>
             </TabPane>
+            <TabPane Key="5">
+                <TabTemplate>Euler Orientation</TabTemplate>
+                <ChildContent>
+                    <AntDesign.Charts.Line @ref="chart_euler_angle" Data="config_euler_angle.Data" Config="config_euler_angle" />
+                </ChildContent>
+            </TabPane>
+            <TabPane Key="6">
+                <TabTemplate>Quaternion</TabTemplate>
+                <ChildContent>
+                    <AntDesign.Charts.Line @ref="chart_quaternion" Data="config_quaternion.Data" Config="config_quaternion" />
+                </ChildContent>
+            </TabPane>
         </Tabs>
 
         <div class="readings">
-        <div class="reading">
-            <span>Temperature:</span>
-            <span>@ViewModel.TemperatureValue</span>
-        </div>
-        <div class="reading">
-            <span>Angle:</span>
-            <span>@ViewModel.AngleValue</span>
-        </div>
-        <div class="reading">
-            <span>Acceleration:</span>
-            <span>@ViewModel.AccelerationValue</span>
-        </div>
-        <div class="reading">
-            <span>Magnetic:</span>
-            <span>@ViewModel.MagneticValue</span>
-        </div>
+            <div class="reading">
+                <span>Temperature:</span>
+                <span>@SensorService.TemperatureValue</span>
+            </div>
+            <div class="reading">
+                <span>Angle:</span>
+                <span>@SensorService.AngleValue</span>
+            </div>
+            <div class="reading">
+                <span>Acceleration:</span>
+                <span>@SensorService.AccelerationValue</span>
+            </div>
+            <div class="reading">
+                <span>Magnetic:</span>
+                <span>@SensorService.MagneticValue</span>
+            </div>
         </div>
     </div>
 </div>
 
 @code {
-    public string CurrentActiveChart= "1";
+    private bool _isRendered = false;
+    public string CurrentActiveChart = "1";
     public record DataChart(DateTime date, double? value, string category);
-    IChartComponent chart_temperature;
-    IChartComponent chart_acceleration;
-    IChartComponent chart_angular_velocity;
-    IChartComponent chart_magnetic_field;
+    IChartComponent chart_temperature = new Line();
+    IChartComponent chart_acceleration = new Line();
+    IChartComponent chart_angular_velocity = new Line();
+    IChartComponent chart_magnetic_field = new Line();
+    IChartComponent chart_euler_angle = new Line();
+    IChartComponent chart_quaternion = new Line();
+
     List<DataChart> data_temperature = new();
     List<DataChart> data_acceleration = new();
     List<DataChart> data_angular_velocity = new();
     List<DataChart> data_magnetic_field = new();
+    List<DataChart> data_euler_angle = new();
+    List<DataChart> data_quaternion = new();
 
 
     LineConfig config_acceleration = new LineConfig
     {
-        Title = new Title
-        {
-            Visible = true,
-            Text = "曲线折线图"
-        },
-        Description = new Description
-        {
-            Visible = true,
-            Text = "用平滑的曲线代替折线。"
-        },
         Padding = "auto",
         AutoFit = true,
         Smooth = true,
@@ -102,16 +111,6 @@
     };
     LineConfig config_angular_velocity = new LineConfig
     {
-        Title = new Title
-        {
-            Visible = true,
-            Text = "曲线折线图"
-        },
-        Description = new Description
-        {
-            Visible = true,
-            Text = "用平滑的曲线代替折线。"
-        },
         Padding = "auto",
         AutoFit = true,
         Smooth = true,
@@ -121,16 +120,6 @@
     };
     LineConfig config_magnetic_field = new LineConfig
     {
-        Title = new Title
-        {
-            Visible = true,
-            Text = "曲线折线图"
-        },
-        Description = new Description
-        {
-            Visible = true,
-            Text = "用平滑的曲线代替折线。"
-        },
         Padding = "auto",
         AutoFit = true,
         Smooth = true,
@@ -138,18 +127,28 @@
         XField = "date",
         YField = "value"
     };
-    Dictionary<DateTime, (
-        Acceleration3D? Acceleration3D, AngularVelocity3D? AngularVelocity3D,
-        MagneticField3D? MagneticField3D, Quaternion? QuaternionOrientation,
-        EulerAngles? EulerOrientation, Temperature? Temperature)> sensorData = new();
+    LineConfig config_euler_angle = new LineConfig
+    {
+        Padding = "auto",
+        AutoFit = true,
+        Smooth = true,
+        SeriesField = "category",
+        XField = "date",
+        YField = "value"
+    }; LineConfig config_quaternion = new LineConfig
+    {
+        Padding = "auto",
+        AutoFit = true,
+        Smooth = true,
+        SeriesField = "category",
+        XField = "date",
+        YField = "value"
+    };
+
+    Dictionary<DateTime, SensorData> sensorData = new();
 
     LineConfig config_temperature = new LineConfig
     {
-        Label = new Label
-        {
-            Visible = true,
-            Text = new[] { "The causes of CO2 emissions", "The causes of CO2 emissiaeazeons", "The azfeazefcauses of CO2 emissions" }
-        },
         Padding = "auto",
         AutoFit = true,
         Smooth = true,
@@ -168,86 +167,92 @@
         @*responsive = true,*@
     };
 
+    protected override void OnAfterRender(bool firstRender)
+    {
+        base.OnAfterRender(firstRender);
+        _isRendered = true;
+        UpdateDataCurrentTab().GetAwaiter();
 
+    }
     protected override void OnInitialized()
     {
-        ViewModel.StateChanged += OnViewModelStateChanged;
-        @*
+        base.OnInitialized();
+        SensorService.StateChanged += OnSensorChanged;
+
         // Simulate data for testing purposes
+        //Task.Run(async () => await AddFakeData());
+    }
+
+    private async Task AddFakeData()
+    {
         var autoRand = new Random();
 
         for (int i = 0; i < 100; i++)
         {
-            AddData(DateTime.UtcNow.AddSeconds(2 * i), new()
+            OnSensorChanged(new ChangeResult<SensorData>(new SensorData()
             {
                 Acceleration3D = new Acceleration3D(autoRand.NextDouble(), autoRand.NextDouble(), autoRand.NextDouble()),
                 AngularVelocity3D = new AngularVelocity3D(autoRand.NextDouble(), autoRand.NextDouble(), autoRand.NextDouble()),
                 MagneticField3D = new MagneticField3D(autoRand.NextDouble(), autoRand.NextDouble(), autoRand.NextDouble()),
+                EulerOrientation = new EulerAngles(new Angle(autoRand.NextDouble()), new Angle(autoRand.NextDouble()), new Angle(autoRand.NextDouble())),
+                QuaternionOrientation = new Quaternion(autoRand.NextDouble(), autoRand.NextDouble(), autoRand.NextDouble(), autoRand.NextDouble()),
                 Temperature = new Temperature(autoRand.Next(20, 30)),
-            });
-        } *@
-        InvokeAsync(StateHasChanged).GetAwaiter().GetResult();
-
+            }, null));
+            await Task.Delay(2000);
+        }
     }
 
-    private void OnViewModelStateChanged(IChangeResult<(
-        Acceleration3D? Acceleration3D, AngularVelocity3D? AngularVelocity3D,
-        MagneticField3D? MagneticField3D, Quaternion? QuaternionOrientation,
-        EulerAngles? EulerOrientation, Temperature? Temperature)> e)
+
+    private void OnSensorChanged(IChangeResult<SensorData> e)
     {
         AddData(DateTime.UtcNow, e.New);
-        UpdateDataCurrentTab().GetAwaiter().GetResult();
-        InvokeAsync(StateHasChanged).GetAwaiter().GetResult();
+        if (_isRendered)
+        {
+            UpdateDataCurrentTab().GetAwaiter();
+            InvokeAsync(StateHasChanged).GetAwaiter(); // for updating the text below the charts
+        }
     }
 
     private async Task UpdateDataCurrentTab()
     {
-        try
+        switch (CurrentActiveChart)
         {
-            switch (CurrentActiveChart)
-            {
-                case "1":
-                    if (chart_temperature != null)
-                    {
-                        config_temperature.Data = data_temperature.ToArray<DataChart>();
-                        await chart_temperature.ChangeData(config_temperature.Data);
-                    }
-                    break;
-                case "2":
-                    if (chart_acceleration != null)
-                    {
-                        config_acceleration.Data = data_acceleration.ToArray<DataChart>();
-                        await chart_acceleration.ChangeData(config_acceleration.Data);
-                    }
-                    break;
-                case "3":
-                    if (chart_angular_velocity != null)
-                    {
-                        config_angular_velocity.Data = data_angular_velocity.ToArray<DataChart>();
-                        await chart_angular_velocity.ChangeData(config_angular_velocity.Data);
-                    }
-                    break;
-                case "4":
-                    if (chart_magnetic_field != null)
-                    {
-                        config_magnetic_field.Data = data_magnetic_field.ToArray<DataChart>();
-                        await chart_magnetic_field.ChangeData(config_magnetic_field.Data);
-                    }
-                    break;
-            }
+            case "1":
+                config_temperature.Data = data_temperature.ToArray<DataChart>();
+                await chart_temperature.ChangeData(config_temperature.Data);
+                break;
+            case "2":
+                config_acceleration.Data = data_acceleration.ToArray<DataChart>();
+                await chart_acceleration.ChangeData(config_acceleration.Data);
+                break;
+            case "3":
+                config_angular_velocity.Data = data_angular_velocity.ToArray<DataChart>();
+                await chart_angular_velocity.ChangeData(config_angular_velocity.Data);
+                break;
+            case "4":
+                config_magnetic_field.Data = data_magnetic_field.ToArray<DataChart>();
+                await chart_magnetic_field.ChangeData(config_magnetic_field.Data);
+                break;
+            case "5":
+                config_euler_angle.Data = data_euler_angle.ToArray<DataChart>();
+                await chart_euler_angle.ChangeData(config_euler_angle.Data);
+                break;
+            case "6":
+                config_quaternion.Data = data_quaternion.ToArray<DataChart>();
+                await chart_quaternion.ChangeData(config_quaternion.Data);
+                break;
         }
-        catch (Exception e) { }
     }
     private async Task OnTabChanged(string activeKey)
     {
         CurrentActiveChart = activeKey;
-        await UpdateDataCurrentTab();
+        if (_isRendered)
+        {
+            await UpdateDataCurrentTab();
+        }
     }
 
-    private void AddData(DateTime date, (
-    Acceleration3D? Acceleration3D, AngularVelocity3D? AngularVelocity3D,
-    MagneticField3D? MagneticField3D, Quaternion? QuaternionOrientation,
-    EulerAngles? EulerOrientation, Temperature? Temperature) data)
+    private void AddData(DateTime date, SensorData data)
     {
         sensorData.Add(DateTime.UtcNow, data);
         if (sensorData.Count > 100)
@@ -262,33 +267,39 @@
             }
 
         }
-        data_temperature.Add(new DataChart(date, data.Temperature.Value.Celsius, "temperature"));
-        @* config_temperature.Data = data_temperature.ToArray<DataChart>(); *@
+        data_temperature.Add(new DataChart(date, data.Temperature.Celsius, "temperature"));
         data_acceleration.AddRange(new[]{
-            new DataChart(date, data.Acceleration3D?.X.Gravity, "acceleration_x"),
-            new DataChart(date, data.Acceleration3D?.Y.Gravity, "acceleration_y"),
-            new DataChart(date, data.Acceleration3D?.Z.Gravity, "acceleration_z")
+            new DataChart(date, data.Acceleration3D.X.Gravity, "acceleration_x"),
+            new DataChart(date, data.Acceleration3D.Y.Gravity, "acceleration_y"),
+            new DataChart(date, data.Acceleration3D.Z.Gravity, "acceleration_z")
         });
-        @* config_acceleration.Data = data_acceleration.ToArray<DataChart>(); *@
         data_angular_velocity.AddRange(new[]{
-            new DataChart(date, data.AngularVelocity3D?.X.RadiansPerSecond, "angular_velocity_x"),
-            new DataChart(date, data.AngularVelocity3D?.Y.RadiansPerSecond, "angular_velocity_y"),
-            new DataChart(date, data.AngularVelocity3D?.Z.RadiansPerSecond, "angular_velocity_z")
+            new DataChart(date, data.AngularVelocity3D.X.RadiansPerSecond, "angular_velocity_x"),
+            new DataChart(date, data.AngularVelocity3D.Y.RadiansPerSecond, "angular_velocity_y"),
+            new DataChart(date, data.AngularVelocity3D.Z.RadiansPerSecond, "angular_velocity_z")
         });
-        @* config_angular_velocity.Data = data_angular_velocity.ToArray<DataChart>(); *@
         data_magnetic_field.AddRange(new[]{
-            new DataChart(date, data.MagneticField3D?.X.Tesla, "magnetic_field_x"),
-            new DataChart(date, data.MagneticField3D?.Y.Tesla, "magnetic_field_y"),
-            new DataChart(date, data.MagneticField3D?.Z.Tesla, "magnetic_field_z")
+            new DataChart(date, data.MagneticField3D.X.Tesla, "magnetic_field_x"),
+            new DataChart(date, data.MagneticField3D.Y.Tesla, "magnetic_field_y"),
+            new DataChart(date, data.MagneticField3D.Z.Tesla, "magnetic_field_z")
         });
-        @* config_magnetic_field.Data = data_magnetic_field.ToArray<DataChart>(); *@
+        data_euler_angle.AddRange(new[]{
+            new DataChart(date, data.EulerOrientation.Heading.Degrees, "euler_orientation_yaw"),
+            new DataChart(date, data.EulerOrientation.Pitch.Degrees, "euler_orientation_pitch"),
+            new DataChart(date, data.EulerOrientation.Roll.Degrees, "euler_orientation_roll")
+        });
+        data_quaternion.AddRange(new[]{
+            new DataChart(date, data.QuaternionOrientation.W, "quaternion_orientation_w"),
+            new DataChart(date, data.QuaternionOrientation.X, "quaternion_orientation_x"),
+            new DataChart(date, data.QuaternionOrientation.Y, "quaternion_orientation_y"),
+            new DataChart(date, data.QuaternionOrientation.Z, "quaternion_orientation_z")
+        });
     }
 
     private void Dispose()
-    {   
-        try {
-            ViewModel.StateChanged -= OnViewModelStateChanged;
-        }catch (JSDisconnectedException){}
+    {
+        if (SensorService != null)
+            SensorService.StateChanged -= OnSensorChanged;
     }
 
 }

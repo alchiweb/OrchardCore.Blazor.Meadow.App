@@ -45,7 +45,7 @@ builder.Services
 //builder.Services.AddAuthorizationCore();
 
 
-builder.Services.AddScoped<SensorViewModel>();
+builder.Services.AddSingleton<SensorService>();
 
 var app = builder.Build();
 
@@ -65,15 +65,7 @@ app.UseHttpsRedirection();
 //app.MapStaticAssets();
 //app.MapRazorComponents<App>()
 //    .AddInteractiveServerRenderMode();
-try
-{
-    app.UseMeadow<MeadowApp>();
-}
-catch (Exception ex)
-{
-    Console.WriteLine($"Error initializing Meadow: {ex.Message}");
-    // Handle the exception as needed
-}
+app.UseMeadow<MeadowApp>();
 app.UseOrchardCore(_ =>
 {
     // serilog is creating issues

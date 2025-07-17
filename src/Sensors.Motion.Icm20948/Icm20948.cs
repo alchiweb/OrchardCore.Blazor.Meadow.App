@@ -11,10 +11,7 @@ namespace Meadow.Foundation.Sensors.Motion
     /// <summary>
 	/// 
 	/// </summary>
-	public partial class Icm20948 : ByteCommsSensorBase<(
-        Acceleration3D? Acceleration3D, AngularVelocity3D? AngularVelocity3D,
-        MagneticField3D? MagneticField3D, Quaternion? QuaternionOrientation,
-        EulerAngles? EulerOrientation, Units.Temperature? Temperature)>,
+	public partial class Icm20948 : ByteCommsSensorBase<Icm20948.SensorData>,
         IAccelerometer, IGyroscope, ISamplingTemperatureSensor, II2cPeripheral
     {
         /// <summary>
@@ -45,7 +42,7 @@ namespace Meadow.Foundation.Sensors.Motion
         /// <summary>
         /// Current Magnetic Field
         /// </summary>
-        public MagneticField3D? MagneticField3D => Conditions.MagneticField3D;
+        public MagneticField3D MagneticField3D => Conditions.MagneticField3D;
 
         /// <summary>
         /// Current Quaternion Orientation
@@ -670,55 +667,50 @@ namespace Meadow.Foundation.Sensors.Motion
 
 
         async Task<AngularVelocity3D> ISensor<AngularVelocity3D>.Read()
-            => (await Read()).AngularVelocity3D!.Value;
+            => (await Read()).AngularVelocity3D;
 
         async Task<Acceleration3D> ISensor<Acceleration3D>.Read()
-            => (await Read()).Acceleration3D!.Value;
+            => (await Read()).Acceleration3D;
 
         async Task<Units.Temperature> ISensor<Units.Temperature>.Read()
-            => (await Read()).Temperature!.Value;
+            => (await Read()).Temperature;
 
         /// <summary>
         /// Reads data from the sensor
         /// </summary>
         /// <returns>The latest sensor reading</returns>
-        protected override Task<
-            (Acceleration3D? Acceleration3D, AngularVelocity3D? AngularVelocity3D,
-            MagneticField3D? MagneticField3D, Quaternion? QuaternionOrientation,
-            EulerAngles? EulerOrientation, Units.Temperature? Temperature)> ReadSensor()
+        protected override Task<SensorData> ReadSensor()
         {
-            (Acceleration3D? Acceleration3D, AngularVelocity3D? AngularVelocity3D,
-            MagneticField3D? MagneticField3D, Quaternion? QuaternionOrientation,
-            EulerAngles? EulerOrientation, Units.Temperature? Temperature) conditions;
+            SensorData conditions = new();
 
             var imuData = ImuDataGet();
-            conditions.Acceleration3D = imuData is null ? null : new Acceleration3D(
+            conditions.Acceleration3D = new Acceleration3D(
                 imuData.Acc[0],
                 imuData.Acc[1],
                 imuData.Acc[2],
                 Acceleration.UnitType.Gravity);
-            conditions.AngularVelocity3D = imuData is null ? null : new AngularVelocity3D(
+            conditions.AngularVelocity3D = new AngularVelocity3D(
                 imuData.Gyro[0],
                 imuData.Gyro[1],
                 imuData.Gyro[2],
                 AngularVelocity.UnitType.RadiansPerSecond);
-            conditions.MagneticField3D = imuData is null ? null : new MagneticField3D(
+            conditions.MagneticField3D = new MagneticField3D(
                 imuData.Mag[0],
                 imuData.Mag[1],
                 imuData.Mag[2],
                 MagneticField.UnitType.Tesla);
-            conditions.QuaternionOrientation = imuData is null ? null : new Quaternion(
+            conditions.QuaternionOrientation = new Quaternion(
                 imuData.Quat[0],
                 imuData.Quat[1],
                 imuData.Quat[2],
                 imuData.Quat[3]
                 );
-            conditions.EulerOrientation = imuData is null ? null : new EulerAngles(
+            conditions.EulerOrientation = new EulerAngles(
                     new Angle(imuData.Angles[0]),
                     new Angle(imuData.Angles[1]),
                     new Angle(imuData.Angles[2])
                     );
-            conditions.Temperature = imuData is null ? null : new Units.Temperature(
+            conditions.Temperature = new Units.Temperature(
                 imuData.Temp,
                 Units.Temperature.UnitType.Celsius);
             return Task.FromResult(conditions);
@@ -729,10 +721,7 @@ namespace Meadow.Foundation.Sensors.Motion
         /// Raise events for subscribers and notify of value changes
         /// </summary>
         /// <param name="changeResult">The updated sensor data</param>
-        protected override void RaiseEventsAndNotify(IChangeResult<
-            (Acceleration3D? Acceleration3D, AngularVelocity3D? AngularVelocity3D,
-            MagneticField3D? MagneticField3D, Quaternion? QuaternionOrientation,
-            EulerAngles? EulerOrientation, Units.Temperature? Temperature)> changeResult)
+        protected override void RaiseEventsAndNotify(IChangeResult<SensorData> changeResult)
         {
             if (changeResult.New.Acceleration3D is { } accel)
             {
